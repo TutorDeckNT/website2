@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TutorDeck - Students Helping Students</title>
+    
+    <!-- Google Fonts & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            /* Lighter, higher contrast bluish-violet palette */
+            --background-color: #404469;
+            --background-deep: #36395A;
+            --text-color: #f5f6fa;
+            --text-muted: #c5c8d4;
+            --glass-bg: rgba(54, 57, 90, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --btn-secondary-hover-bg: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --dot-color: rgba(255, 255, 255, 0.1);
+            /* NEW: Universal Glow Variables */
+            --glow-shadow: 0 4px 30px rgba(0,0,0,0.2);
+            --glow-shadow-hover: 0 8px 40px rgba(0,0,0,0.3);
+        }
+        body.light-mode {
+            /* Light Mode Theme */
+            --background-color: #f8f9fc;
+            --background-deep: #ffffff;
+            --text-color: #12121c;
+            --text-muted: #5a6470;
+            --glass-bg: rgba(255, 255, 255, 0.5);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --btn-secondary-hover-bg: rgba(0, 0, 0, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --dot-color: rgba(0, 0, 0, 0.1);
+            /* NEW: Light mode glow */
+            --glow-shadow: 0 4px 30px rgba(0,0,0,0.08);
+            --glow-shadow-hover: 0 8px 40px rgba(0,0,0,0.12);
+        }
+
+        /* --- Basic Reset & Setup --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { 
+            scroll-behavior: smooth; 
+            font-size: 14.5px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color); 
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: color 0.3s ease, background-color 0.3s ease;
+            position: relative;
+        }
+        
+        /* --- Per-Section Backgrounds --- */
+        .section-background {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.8; }
+        .blob1 { width: 500px; height: 500px; background: rgba(74, 144, 226, 0.7); top: -20%; left: -20%; animation: move-around-1 18s infinite linear; }
+        .blob2 { width: 400px; height: 400px; background: rgba(126, 211, 33, 0.6); bottom: -15%; right: -15%; animation: move-around-2 22s infinite linear; }
+        .blob3 { width: 400px; height: 400px; background: rgba(226, 74, 158, 0.3); top: 10%; right: -25%; animation: move-around-3 28s infinite linear; }
+        .blob4 { width: 350px; height: 350px; background: rgba(74, 226, 215, 0.4); bottom: 5%; left: -20%; animation: move-around-4 22s infinite linear; }
+        
+        @keyframes move-around-1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(12vw, 15vh) scale(1.2); } 100% { transform: translate(0, 0) scale(1); } }
+        @keyframes move-around-2 { 0% { transform: translate(0, 0); } 50% { transform: translate(-18vw, -20vh); } 100% { transform: translate(0, 0); } }
+        @keyframes move-around-3 { 0% { transform: translate(0, 0); } 50% { transform: translate(-10vw, 5vh); } 100% { transform: translate(0, 0); } }
+        @keyframes move-around-4 { 0% { transform: translate(0, 0); } 50% { transform: translate(10vw, -10vh); } 100% { transform: translate(0, 0); } }
+
+        /* --- FIXED Elements that stay on screen --- */
+        .top-fade-gradient { position: fixed; top: 0; left: 0; width: 100%; height: 150px; z-index: 1000; background: linear-gradient(to bottom, var(--background-color) 40%, transparent); pointer-events: none; }
+        .top-logo-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1001; transition: all 0.4s ease; }
+        .logo img { height: 90px; width: auto; display: block; }
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: var(--glass-bg); backdrop-filter: blur(15px) saturate(180%); -webkit-backdrop-filter: blur(15px) saturate(180%); border: 1px solid var(--glass-border); border-radius: 50px; padding: 6px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* --- Main Content (Scrollable) --- */
+        .main-content-wrapper { transition: all 0.4s ease; position: relative; z-index: 1; }
+        
+        /* --- Hero Section Redesign --- */
+        .hero { 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 95vh; 
+            padding: 10vh 3rem 5vh 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-content { position: relative; z-index: 2; }
+        h1 { font-size: clamp(2.6rem, 4.5vw, 3.4rem); font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1.5px; }
+        .subheadline { font-size: 1.125rem; color: var(--text-muted); max-width: 550px; margin: 0 auto 2.5rem auto; font-weight: 400; transition: color 0.3s ease; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; font-family: 'Inter', sans-serif; text-decoration: none; font-weight: 600; font-size: 1.05rem; transition: all 0.3s ease; border: 2px solid transparent; border-radius: 50px; }
+        .btn-primary { background-color: var(--primary-color); color: #fff; gap: 0.6rem; }
+        .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(74, 144, 226, 0.45); filter: brightness(1.1); }
+        .cta-buttons { display: flex; justify-content: center; align-items: center; gap: 1rem; }
+        .btn-secondary { background-color: rgba(255, 255, 255, 0.1); color: var(--text-color); border: 2px solid rgba(255, 255, 255, 0.3); }
+        .btn-secondary:hover { background-color: rgba(255, 255, 255, 0.2); border-color: var(--primary-color); transform: translateY(-4px); }
+        body.light-mode .btn-secondary { background-color: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); }
+        body.light-mode .btn-secondary:hover { background-color: rgba(0, 0, 0, 0.1); border-color: var(--primary-color); }
+        
+        /* --- Impact / Features Section --- */
+        .impact-section { padding: 4rem 3rem; position: relative; z-index: 1; background-color: var(--background-deep); background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 15px 15px; }
+        .impact-content { max-width: 1200px; margin: 0 auto; text-align: center; }
+        .impact-content h2, .impact-content .section-text { will-change: transform, opacity; }
+        .impact-content h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .impact-content .section-text { max-width: 700px; margin: 0 auto 4rem auto; color: var(--text-muted); font-size: 1.1rem; }
+        .values-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+        /* MODIFIED: Unified card style */
+        .value-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: 2.5rem 2rem; /* Taller */
+            border-radius: 24px; /* More rounded */
+            text-align: left;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            will-change: transform, opacity;
+            box-shadow: var(--glow-shadow);
+        }
+        .value-card:hover { transform: translateY(-8px) !important; box-shadow: var(--glow-shadow-hover); }
+        .card-icon { font-size: 2.2rem; margin-bottom: 1rem; }
+        .value-card h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .value-card p { color: var(--text-muted); font-size: 0.95rem; }
+        .values-grid .value-card:nth-child(1) .card-icon { color: var(--primary-color); }
+        .values-grid .value-card:nth-child(2) .card-icon { color: #34D399; }
+        .values-grid .value-card:nth-child(3) .card-icon { color: #A78BFA; }
+        .values-grid .value-card:nth-child(4) .card-icon { color: #FBBF24; }
+
+        /* --- Stats Section --- */
+        .stats-section { padding: 3rem 3rem; position: relative; z-index: 1; overflow: hidden; }
+        .stats-content { max-width: 1200px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
+        .stats-content h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 3rem; will-change: transform, opacity; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+        .stat-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: 2.5rem 1rem;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            will-change: transform, opacity;
+            transition: all 0.3s ease-in-out;
+            box-shadow: var(--glow-shadow);
+        }
+        .stat-item:hover { transform: translateY(-8px); box-shadow: var(--glow-shadow-hover); }
+        .stat-number {
+            font-size: clamp(3rem, 7vw, 4.5rem);
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text-color); /* MODIFIED */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5); /* MODIFIED */
+        }
+        body.light-mode .stat-number { text-shadow: 0 0 15px rgba(0, 0, 0, 0.2); }
+        .stat-description {
+            margin-top: 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+        
+        /* --- Tutors Section --- */
+        .tutors-section { background-color: var(--background-deep); background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 15px 15px; padding: 6rem 3rem; position: relative; z-index: 1; }
+        .tutors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; max-width: 1200px; margin: 0 auto; }
+        .tutors-text, .highlights-grid { will-change: transform, opacity; }
+        .tutors-text h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .tutors-text p { color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; }
+        .tutors-text .cta-link { color: var(--primary-color); text-decoration: none; font-weight: 600; }
+        .highlights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        /* MODIFIED: Unified card style */
+        .highlight-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: 2rem; /* Taller */
+            border-radius: 20px; /* More rounded */
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            box-shadow: var(--glow-shadow);
+        }
+        .highlight-card:hover { transform: translateY(-8px); box-shadow: var(--glow-shadow-hover); }
+        .highlight-card i { font-size: 1.5rem; color: var(--primary-color); margin-bottom: 1rem; }
+        .highlight-card h4 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .highlight-card p { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* --- About Section --- */
+        .about-section { padding: 8rem 3rem; position: relative; z-index: 1; overflow: hidden; }
+        .about-content { position: relative; z-index: 2; }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; max-width: 1200px; margin: 0 auto; }
+        .about-image, .about-text { will-change: transform, opacity; }
+        .about-image { 
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            width: 100%; height: 400px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--glow-shadow);
+            transition: all 0.3s ease;
+        }
+        .about-image:hover { transform: scale(1.02); box-shadow: var(--glow-shadow-hover); }
+        body.light-mode .about-image { background-color: rgba(0, 0, 0, 0.05); }
+        .about-image i { font-size: 4rem; color: var(--text-muted); }
+        .about-text h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .about-text p { color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; }
+        .about-text .btn { gap: 0.5rem; }
+
+        /* --- Nav Bar--- */
+        .bottom-nav ul { list-style: none; display: flex; align-items: center; gap: 8px; }
+        .bottom-nav a.nav-link { display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--text-muted); padding: 0 12px; height: 40px; border-radius: 50px; transition: all 0.3s ease; }
+        .bottom-nav a.nav-link:not(.active):hover { background-color: var(--btn-secondary-hover-bg); }
+        .bottom-nav a.nav-link.active { color: var(--primary-color); }
+        .bottom-nav i { font-size: 1.25rem; }
+        .bottom-nav span { font-size: 0.9rem; font-weight: 600; white-space: nowrap; max-width: 0; opacity: 0; overflow: hidden; margin-left: 0; transition: max-width 0.4s ease, opacity 0.2s ease, margin-left 0.4s ease; }
+        .bottom-nav:hover span, .bottom-nav.nav-show-on-load span { max-width: 100px; opacity: 1; margin-left: 8px; }
+        .bottom-nav:hover #theme-toggle-btn span, .bottom-nav.nav-show-on-load #theme-toggle-btn span { max-width: 0; opacity: 0; margin-left: 0; }
+        .nav-divider { width: 1px; height: 20px; background-color: var(--glass-border); margin: 0 4px; }
+        .btn-nav-signin { text-decoration: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 10px 18px; border-radius: 50px; background-color: rgba(232, 238, 249, 0.15); border: 1px solid rgba(232, 238, 249, 0.3); color: var(--text-color); transition: all 0.3s ease; }
+        .btn-nav-signin:hover { background-color: rgba(232, 238, 249, 0.3); transform: scale(1.05); }
+
+        /* --- Site Footer with static colors --- */
+        .site-footer { 
+            background-color: #212335; 
+            color: #c5c8d4; 
+            padding: 5rem 3rem 2rem 3rem; 
+            position: relative; 
+            z-index: 1; 
+        }
+        .footer-container { max-width: 1200px; margin: 0 auto; }
+        .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-bottom: 3rem; }
+        .footer-column h4 { 
+            color: #f5f6fa; 
+            margin-bottom: 1rem; 
+            font-weight: 600; 
+        }
+        .footer-column ul { list-style: none; }
+        .footer-column ul li { margin-bottom: 0.5rem; }
+        .footer-column a { 
+            color: #c5c8d4; 
+            text-decoration: none; 
+            transition: color 0.3s ease; 
+        }
+        .footer-column a:hover { color: var(--primary-color); }
+        .footer-about img { height: 45px; margin-bottom: 1rem; }
+        .footer-about p { font-size: 0.9rem; }
+        .social-links { margin-top: 1rem; }
+        .social-links a { display: inline-block; margin-right: 1rem; font-size: 1.5rem; }
+        .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 2rem; text-align: center; font-size: 0.9rem; }
+
+        /* --- Scroll Animation Styles --- */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .values-grid .animate-on-scroll:nth-child(2),
+        .stats-grid .animate-on-scroll:nth-child(2) { transition-delay: 0.1s; }
+        .values-grid .animate-on-scroll:nth-child(3),
+        .stats-grid .animate-on-scroll:nth-child(3) { transition-delay: 0.2s; }
+        .values-grid .animate-on-scroll:nth-child(4),
+        .stats-grid .animate-on-scroll:nth-child(4) { transition-delay: 0.3s; }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 992px) { 
+            .logo img { height: 75px; } 
+            .values-grid, .stats-grid { grid-template-columns: repeat(2, 1fr); } 
+            .footer-grid { grid-template-columns: repeat(2, 1fr); } 
+            .tutors-grid, .about-grid { grid-template-columns: 1fr; } 
+            .highlights-grid { grid-template-columns: repeat(2, 1fr); } 
+            .about-image { height: 300px; margin-bottom: 2rem; } 
+        }
+        @media (max-width: 600px) { 
+            .logo img { height: 60px; }
+            .hero, .impact-section, .stats-section, .tutors-section, .about-section, .site-footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+            .values-grid, .stats-grid, .highlights-grid { grid-template-columns: 1fr; } 
+            .impact-content h2, .stats-content h2, .tutors-text h2, .about-text h2 { font-size: 2rem; } 
+            .hero { padding-top: 10rem; padding-bottom: 8rem;} 
+            .cta-buttons { flex-direction: column; }
+            .footer-grid { grid-template-columns: 1fr; text-align: center; } 
+            .footer-about img { margin-left: auto; margin-right: auto; } 
+        }
+
+    </style>
+</head>
+<body>
+    
+    <div class="top-fade-gradient"></div>
+    <div class="top-logo-container">
+        <a href="#home" class="logo">
+            <img src="eaglelogo-removebg (1).png" alt="TutorDeck Logo">
+        </a>
+    </div>
+
+    <div class="main-content-wrapper">
+        <!-- ============================================= -->
+        <!-- ============== Hero Section ================= -->
+        <!-- ============================================= -->
+        <main class="hero" id="home">
+            <div class="section-background">
+                <div class="blob blob1"></div>
+                <div class="blob blob2"></div>
+            </div>
+            <div class="hero-content">
+                <h1 class="animate-on-scroll">Students Helping Students.<br>Leaders in the Making.</h1>
+                <p class="subheadline animate-on-scroll" style="transition-delay: 0.1s;">At TutorDeck, students support each other through tutoring and mentorship — all while growing as leaders, earning volunteer hours, and making a real impact.</p>
+                <div class="cta-buttons animate-on-scroll" style="transition-delay: 0.2s;">
+                    <a href="join.html" class="btn btn-primary">Join the Movement <i class="fas fa-arrow-right"></i></a>
+                    <a href="dashboard.html" class="btn btn-secondary">Sign In</a>
+                </div>
+            </div>
+        </main>
+
+        <!-- ============================================= -->
+        <!-- ============= Impact Section ================ -->
+        <!-- ============================================= -->
+        <section class="impact-section">
+            <div class="impact-content">
+                <h2 class="animate-on-scroll">Support, Growth, and Real Impact</h2>
+                <p class="section-text animate-on-scroll">TutorDeck isn’t just about teaching — it’s about showing up for each other. Whether you're helping someone study or stepping up as a mentor, every action counts. You’re learning, leading, and making a real difference.</p>
+                <div class="values-grid">
+                    <div class="value-card animate-on-scroll"><div class="card-icon"><i class="fas fa-handshake-angle"></i></div><h3>Peer Support</h3><p>Help classmates and friends in a way that feels natural and personal.</p></div>
+                    <div class="value-card animate-on-scroll"><div class="card-icon"><i class="fas fa-arrow-trend-up"></i></div><h3>Leadership Growth</h3><p>Build real-world leadership skills through mentorship and student-led projects.</p></div>
+                    <div class="value-card animate-on-scroll"><div class="card-icon"><i class="fas fa-hourglass-half"></i></div><h3>Flexible & Impactful</h3><p>No rigid schedules — help when you can, earn verified hours, and make it count.</p></div>
+                    <div class="value-card animate-on-scroll"><div class="card-icon"><i class="fas fa-globe"></i></div><h3>Global & Local Reach</h3><p>Make an impact at your school or join sessions with students worldwide.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================= -->
+        <!-- ============== Stats Section ================ -->
+        <!-- ============================================= -->
+        <section class="stats-section">
+            <div class="section-background">
+                <div class="blob blob3"></div>
+                <div class="blob blob4"></div>
+            </div>
+            <div class="stats-content">
+                <h2 class="animate-on-scroll">Impact in Numbers</h2>
+                <div class="stats-grid">
+                    <div class="stat-item animate-on-scroll"><div class="stat-number" data-target="250">0</div><p class="stat-description">Student Tutors & Mentors</p></div>
+                    <div class="stat-item animate-on-scroll"><div class="stat-number" data-target="2000">0</div><p class="stat-description">Volunteer Hours Logged</p></div>
+                    <div class="stat-item animate-on-scroll"><div class="stat-number" data-target="150">0</div><p class="stat-description">Learners Impacted</p></div>
+                    <div class="stat-item animate-on-scroll"><div class="stat-number" data-target="15">0</div><p class="stat-description">Countries Reached</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================= -->
+        <!-- ============== Tutors Section =============== -->
+        <!-- ============================================= -->
+        <section class="tutors-section">
+            <div class="tutors-grid">
+                <div class="tutors-text animate-on-scroll">
+                    <h2>TutorDeck for Tutors</h2>
+                    <p>Tutoring with TutorDeck isn’t just about helping others, it’s about unlocking opportunities for yourself. As you take part in our programs, you’ll build a resume of real-world impact and become eligible for exclusive recognition and awards.</p>
+                    <a href="#" class="cta-link">Explore What You can Earn →</a>
+                </div>
+                <div class="highlights-grid animate-on-scroll" style="transition-delay: 0.1s;">
+                    <div class="highlight-card"><i class="fas fa-medal"></i><h4>Volunteer Service Awards</h4><p>Earn eligibility for school, state, or even national-level awards based on your hours.</p></div>
+                    <div class="highlight-card"><i class="fas fa-graduation-cap"></i><h4>Leadership Recognition</h4><p>Stand out with verified leadership roles through our Mentorship Program.</p></div>
+                    <div class="highlight-card"><i class="fas fa-file-alt"></i><h4>Resume & College-Ready Skills</h4><p>Communication. Leadership. Impact. Everything colleges and scholarships look for.</p></div>
+                    <div class="highlight-card"><i class="fas fa-trophy"></i><h4>TutorDeck Certificates & Spotlights</h4><p>Get officially recognized and featured for your contributions.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================= -->
+        <!-- ============== About Section ================ -->
+        <!-- ============================================= -->
+        <section class="about-section">
+            <div class="section-background">
+                <div class="blob blob1" style="animation-direction: reverse;"></div>
+                <div class="blob blob3" style="animation-direction: reverse;"></div>
+            </div>
+            <div class="about-content">
+                <div class="about-grid">
+                    <div class="about-image animate-on-scroll"><i class="fas fa-image"></i></div>
+                    <div class="about-text animate-on-scroll" style="transition-delay: 0.1s;">
+                        <h2>A Movement by Students, for Students.</h2>
+                        <p>TutorDeck began with a simple idea: to make quality educational support accessible to everyone by empowering students to teach and lead. We are a growing nonprofit initiative building a global community of learners and mentors.</p>
+                        <a href="about.html" class="btn btn-primary">Discover Our Story <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <!-- ============================================= -->
+    <!-- ============== Bottom Nav Bar =============== -->
+    <!-- ============================================= -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <ul>
+            <li><a href="index.html" class="nav-link active"><i class="fas fa-home"></i><span>Home</span></a></li>
+            <li><a href="#tutors" class="nav-link"><i class="fas fa-chalkboard-user"></i><span>Tutors</span></a></li>
+            <li><a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <li><a href="join.html" class="nav-link"><i class="fas fa-user-plus"></i><span>Join</span></a></li>
+            <li><a href="#" id="theme-toggle-btn" class="nav-link"><i class="fas fa-sun"></i><span>Theme</span></a></li>
+            <div class="nav-divider"></div>
+            <li><a href="dashboard.html" class="btn-nav-signin">Sign In</a></li>
+        </ul>
+    </nav>
+    
+    <!-- ============================================= -->
+    <!-- ================ Site Footer ================ -->
+    <!-- ============================================= -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-column footer-about">
+                    <img src="eaglelogo-removebg (1).png" alt="TutorDeck Mascot" class="footer-logo">
+                    <h4>TutorDeck</h4>
+                    <p>Based in North Texas, Serving Globally.</p>
+                </div>
+                <div class="footer-column"><h4>Quick Links</h4><ul><li><a href="#about">About Us</a></li><li><a href="#">Our Chapters</a></li><li><a href="#join">Get Involved</a></li></ul></div>
+                <div class="footer-column"><h4>Contact Us</h4><ul><li><a href="mailto:prospertutorcorp@gmail.com">prospertutorcorp@gmail.com</a></li><li><a href="tel:+14698504335">(469) 850-4335</a></li></ul></div>
+                <div class="footer-column"><h4>Follow Us</h4><div class="social-links"><a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a><a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></div></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2024 TutorDeck. All Rights Reserved.</p></div>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            
+            // --- Theme Toggle ---
+            const themeToggleButton = document.getElementById('theme-toggle-btn');
+            const themeIcon = themeToggleButton.querySelector('i');
+            const setTheme = (theme) => {
+                if (theme === 'light') { body.classList.add('light-mode'); themeIcon.className = 'fas fa-moon'; localStorage.setItem('theme', 'light'); } 
+                else { body.classList.remove('light-mode'); themeIcon.className = 'fas fa-sun'; localStorage.setItem('theme', 'dark'); }
+            };
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+
+            // --- Nav Link Logic ---
+            const navLinks = document.querySelectorAll('a.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (link.id === "theme-toggle-btn") { 
+                        e.preventDefault(); 
+                        setTheme(body.classList.contains('light-mode') ? 'dark' : 'light'); 
+                    } else if (!link.href.includes('.html')) { 
+                        e.preventDefault(); 
+                        navLinks.forEach(l => l.classList.remove('active')); 
+                        e.currentTarget.classList.add('active'); 
+                        const targetId = link.getAttribute('href');
+                        document.querySelector(targetId)?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // --- Stat Counter Animation ---
+            const statNumbers = document.querySelectorAll('.stat-number');
+            const easeInOutQuint = t => t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+            const animateStats = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = entry.target;
+                        const finalValue = parseInt(target.dataset.target, 10);
+                        const duration = 2000;
+                        let startTime = null;
+                        const step = (currentTime) => {
+                            if (!startTime) startTime = currentTime;
+                            const progress = Math.min((currentTime - startTime) / duration, 1);
+                            const easedProgress = easeInOutQuint(progress);
+                            const currentValue = Math.floor(easedProgress * finalValue);
+                            target.innerText = currentValue.toLocaleString();
+                            if (progress < 1) { requestAnimationFrame(step); } 
+                            else { target.innerText = finalValue.toLocaleString() + '+'; if (finalValue === 2000) target.innerText = '2,000+'; }
+                        };
+                        requestAnimationFrame(step);
+                        observer.unobserve(target);
+                    }
+                });
+            };
+            const statObserver = new IntersectionObserver(animateStats, { threshold: 0.8 });
+            statNumbers.forEach(num => statObserver.observe(num));
+
+            // --- Nav Bar Intro Animation ---
+            const bottomNav = document.getElementById('bottom-nav');
+            if (bottomNav && !sessionStorage.getItem('navAnimationShown')) {
+                bottomNav.classList.add('nav-show-on-load');
+                setTimeout(() => {
+                    bottomNav.classList.remove('nav-show-on-load');
+                }, 2000); 
+                sessionStorage.setItem('navAnimationShown', 'true');
+            }
+            
+            // --- General Scroll Animation Logic ---
+            const scrollObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1 
+            });
+            
+            const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
+            elementsToAnimate.forEach(el => {
+                scrollObserver.observe(el);
+            });
+        });
+    </script>
+
+</body>
+</html>
